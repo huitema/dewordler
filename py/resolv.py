@@ -3,15 +3,15 @@
 #
 # This module implements the rules
 
-import words5
+import wordle_words
 import random
 
 class wordle_query:
-    word_set = set(words5.word_list)
+    word_set = set(wordle_words.word_list)
 
     def __init__(self, w):
         if w == "":
-            w = random.choice(words5.word_list)
+            w = random.choice(wordle_words.word_list)
         elif not w in wordle_query.word_set:
             print("Weird: " + w)
         self.w = w
@@ -42,7 +42,7 @@ class wordle_query:
 class wordle_solver:
     def __init__(self):
         self.list = []
-        for w in words5.word_list:
+        for w in wordle_words.word_list:
             self.list.append(w)
         self.found = [".", ".", ".", ".", "."]
         self.excluded = set()
