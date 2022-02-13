@@ -10,7 +10,7 @@
 
 import resolv
 import sys
-import words5
+import wordle_words
 import traceback
 import random
 
@@ -126,11 +126,11 @@ if False:
 # Then, compute for each potential entries (3000?) the
 # minmax size of the reminder
 
-minimax = len(str(words5.word_list))
+minimax = len(str(wordle_words.word_list))
 minimax_limit = 225
 selected = []
 
-for w in words5.word_list:
+for w in wordle_words.word_list:
     sw = selected_start(w)
     max_bucket = sw.longest_bucket(minimax_limit)
     if max_bucket <= minimax_limit:
@@ -145,7 +145,7 @@ print("Selecting 100 random queries")
 
 origin = []
 queries = []
-for o in words5.word_list:
+for o in wordle_words.word_list:
     origin.append(o)
 for i in range(0, 100):
     x = random.choice(origin)
