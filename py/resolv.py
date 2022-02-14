@@ -6,6 +6,56 @@
 import wordle_words
 import random
 
+class char_frequencies:
+    def __init__(self, mask="....."):
+        self.mask=mask
+        self.c = []
+        self.count = []
+        self.frequency = []
+        self.nb_words = 0
+        self.is_computed = False
+        for i in range(0,26):
+            self.c.append(chr(ord('a') + i))
+            self.count.append(0)
+            self.frequency.append(0.0)
+
+    # weight a word 
+    def weight_word(self, w):
+        y = 0.0
+        seen = set()
+        for i in range(0,5):
+            if self.mask[i] != '=':
+                x = w[i]
+                if not x in seen:
+                    y += self.frequency[ord(x) - ord('a')]
+                    seen.add(x)
+        return y
+
+    # parse a word and update the counts
+    # the character positions marked as already know are ignored
+    def add_word(self, w):
+        seen = set()
+        for i in range(0,5):
+            if self.mask[i] != '=':
+                x = w[i]
+                if not x in seen:
+                    self.count[ord(x) - ord('a')] += 1
+                    seen.add(x)
+        self.nb_words += 1
+        self.is_computed = False
+
+    # parse a list of words and update the frequencies
+    # the character positions marked as already know are ignored
+    def add_list(self, l):
+        for w in l:
+            self.add_word(w)
+
+    # update the table of frequencies after adding words
+    def set_frequencies(self):
+        for i in range(0,26):
+            self.frequency[i] = self.count[i]/self.nb_words
+        self.is_computed = True
+
 class wordle_query:
     word_set = set(wordle_words.word_list)
 
@@ -40,18 +90,20 @@ class wordle_query:
         return wordle_query.compare_word(self.w, trial5)
 
 class wordle_solver:
-    def __init__(self):
+    def __init__(self, strategy=3, n_max=30):
         self.list = []
         for w in wordle_words.word_list:
             self.list.append(w)
         self.found = [".", ".", ".", ".", "."]
         self.excluded = set()
         self.included = set()
+        self.strategy=strategy
+        self.n_max = n_max
 
-    def cx(self):
+    def cx(self, l):
         c = wordle_solver()
         c.list = []
-        for x in self.list:
+        for x in l:
             c.list.append(x)
         c.found = []
         for x in self.found:
@@ -147,9 +199,6 @@ class wordle_solver:
                 lc_w.append(w)
         return random.choice(lc_w)
 
-    def suggest(self):
-        return wordle_solver.long_pick(self.list)
-
     # recursive resolver, rank N.
     # pick up to N possible responses or solutions at random
     # for each response, 
@@ -159,7 +208,7 @@ class wordle_solver:
     #     count the highest number of steps for the solutions.
     # retain the responses with the lowest numbers of steps (minimax)
     # return one of the best responses at random.
-    def suggest_recursive(self, n_max,debug=False):
+    def suggest_recursive(self, n_max, debug=False):
         minimax = len(self.list)
         minisum = 1000000
         minimax_list = []
@@ -214,7 +263,13 @@ class wordle_solver:
                     # print("New good response: " + response + " (" + str(minimax) + ")")
         return wordle_solver.long_pick(minimax_list, debug)
 
-
+    def suggest(self, debug=False):
+        if self.strategy == 3:
+            return self.suggest_recursive(self.n_max, debug)
+        elif self.strategy == 2:
+            return wordle_solver.long_pick(self.list)
+        else:
+            return self.list[0]
         
 
                     
