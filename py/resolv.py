@@ -90,7 +90,7 @@ class wordle_query:
         return wordle_query.compare_word(self.w, trial5)
 
 class wordle_solver:
-    def __init__(self, strategy=3, n_max=30):
+    def __init__(self, strategy=2, n_max=8):
         self.list = []
         for w in wordle_words.word_list:
             self.list.append(w)
@@ -100,10 +100,10 @@ class wordle_solver:
         self.strategy=strategy
         self.n_max = n_max
 
-    def cx(self, l):
+    def cx(self):
         c = wordle_solver()
         c.list = []
-        for x in l:
+        for x in self.list:
             c.list.append(x)
         c.found = []
         for x in self.found:
@@ -197,7 +197,7 @@ class wordle_solver:
                 lc_w = [ w ]
             elif len(ltrs) == lc_max:
                 lc_w.append(w)
-        return random.choice(lc_w)
+        return lc_w[0]
 
     # recursive resolver, rank N.
     # pick up to N possible responses or solutions at random

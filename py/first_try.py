@@ -191,6 +191,8 @@ class candidate:
         self.max_bucket = 0
         self.av_bucket = 0
         self.buckets = dict()
+
+    # load buckets from a list.
     def set_buckets(self, l):
         for w in l:
             r = resolv.wordle_query.compare_word(w, self.candidate)
@@ -206,6 +208,25 @@ class candidate:
                 self.max_bucket = n
         if len(self.buckets) > 0:
             self.av_bucket = sum_n / len(self.buckets)
+
+    # iterate on resolution of the buckets
+    def iterate(self, l, previous_solver):
+        for r in self.buckets:
+            if r == "=====":
+                pass
+            else:
+                # Create a resolver by cloning the upper level one.
+                # todo: variation of clone and resolve
+                b = bucket[r]
+                solver = previous_solver.cx()
+                solver.process(self.w, r)
+                # call solver with preset parameters
+                guess = solver.suggest()
+                # create sub-buckets for this guess.
+                
+                
+        
+
                
 
 # Main
