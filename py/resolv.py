@@ -6,6 +6,36 @@
 import wordle_words
 import random
 
+class word_frequency:
+    def __init__(self, word, weight):
+        self.word = word
+        self.weight = weight
+
+    def myComp(self, other):
+        r = 0
+        if self.weight < other.weight:
+            r = -1
+        elif self.weight > other.weight:
+            r = 1
+        elif self.word < other.word:
+            r = -1
+        elif self.word > other.word:
+            r = 1
+        return r
+
+    def __lt__(self, other):
+        return self.myComp(other) < 0
+    def __gt__(self, other):
+        return self.myComp(other) > 0
+    def __eq__(self, other):
+        return self.myComp(other) == 0
+    def __le__(self, other):
+        return self.myComp(other) <= 0
+    def __ge__(self, other):
+        return self.myComp(other) >= 0
+    def __ne__(self, other):
+        return self.myComp(other) != 0
+
 class char_frequencies:
     def __init__(self, mask="....."):
         self.mask=mask
@@ -56,6 +86,22 @@ class char_frequencies:
             self.frequency[i] = self.count[i]/self.nb_words
         self.is_computed = True
 
+    def weight_and_sort_list(self, l, n, debug=False):
+        r_list = []
+        self.add_list(l)
+        self.set_frequencies()
+        for w in l:
+            r_list.append(word_frequency(w, self.weight_word(w)))
+        s_list = sorted(r_list, reverse=True)
+        if debug:
+            for wf in s_list[0:5]:
+                print("Selected: " + wf.word + " (" + str(wf.weight) + ")")
+        selected = []
+        for wf in s_list[0:n]:
+            selected.append(wf.word)
+        return selected
+        
+
 class wordle_query:
     word_set = set(wordle_words.word_list)
 
@@ -99,6 +145,7 @@ class wordle_solver:
         self.included = set()
         self.strategy=strategy
         self.n_max = n_max
+        self.rec_string = ""
 
     def cx(self):
         c = wordle_solver()
@@ -199,6 +246,22 @@ class wordle_solver:
                 lc_w.append(w)
         return lc_w[0]
 
+    def frequency_list(self, l_max, debug=False):
+        f_mask = ""
+        for i in range(0,5):
+            if self.found[i] == ".":
+                f_mask += "."
+            else:
+                f_mask += "="
+        if debug:
+            print("Frequency mask:" + f_mask)
+        cf = char_frequencies(f_mask)
+        return cf.weight_and_sort_list(self.list, l_max, debug=debug)
+
+    def frequency_pick(self, debug=False):
+        l = self.frequency_list(1, debug)
+        return l[0]
+
     # recursive resolver, rank N.
     # pick up to N possible responses or solutions at random
     # for each response, 
@@ -216,7 +279,9 @@ class wordle_solver:
         if n_max > len(self.list):
             n_max = len(self.list)
             selected = self.list
-        else:
+        elif False:
+            if debug:
+                print("Select " + str(n_max) + " responses at random.")
             origin = []
             for o in self.list:
                 origin.append(o)
@@ -224,49 +289,64 @@ class wordle_solver:
                 x = random.choice(origin)
                 origin.remove(x)
                 selected.append(x)
+        else:
+            if debug:
+                print(self.rec_string + "Select " + str(n_max) + " responses by frequency.")
+            selected = self.frequency_list(n_max, False)
+
         for response in selected:
             response_max = 0
             sum_max = 0
-            for solution in selected:
+            for solution in self.list:
                 q = wordle_query(solution)
                 s = self.cx()
+                s_debug = debug
+                if len(s.list) <= 6:
+                    s.strategy = 3
+                else:
+                    s_debug = False
+                    s.strategy = 2
+                s.n_max = 6
+                s.rec_string = self.rec_string + ">"
                 n = 1
                 x = response
-                # print(response + ":" + solution + ":" + str(len(s.list)))
                 while n < 10:
                     r = q.compare(x)
                     if r == "=====":
                         break
                     n += 1
                     s.process(x,r)
-                    # for w in s.list:
-                    #    print("--- " + w)
-                    # print(response + ":" + solution + ":" + str(n) + ":" + x + ":" + r + ":" + str(len(s.list)))
-                    x = s.suggest()
+                    x = s.suggest(s_debug)
                 sum_max += n
                 if n > response_max:
                     response_max = n
                     if response_max > minimax:
+                        if debug:
+                            print("Abandon " + response + " after " + solution + ":" + str(n))
                         break
-            if response_max < minimax:
+            if response_max < minimax or (response_max == minimax and sum_max < minisum):
                 minimax = response_max
                 minisum = sum_max
                 minimax_list = [ response ]
-                # print("New best response: " + response + " (" + str(minimax) + ")")
-            elif response_max == minimax:
-                if sum_max < minisum:
-                    minisum = sum_max
-                    minimax_list = [ response ]
-                    # print("New best response: " + response + " (" + str(minimax) + ")")
-                else:
-                    minimax_list.append(response)
-                    # print("New good response: " + response + " (" + str(minimax) + ")")
-        return wordle_solver.long_pick(minimax_list, debug)
+                if debug:
+                    print(self.rec_string + "New best response: " + response + " (" + str(response_max) + ", " + str(sum_max) + ")")
+            elif response_max == minimax and sum_max == minisum:
+                minimax_list.append(response)
+                if debug:
+                    print(self.rec_string + "New good response: " + response + " (" + str(response_max) + ", " + str(sum_max) + ")")
+            elif debug:
+                print(self.rec_string + "Not a good response: " + response + " (" + str(response_max) + ")")
+        # return wordle_solver.long_pick(minimax_list, debug)
+        if debug:
+            print("Selected: " + minimax_list[0])
+        return minimax_list[0]
 
     def suggest(self, debug=False):
         if self.strategy == 3:
             return self.suggest_recursive(self.n_max, debug)
         elif self.strategy == 2:
+            return self.frequency_pick(debug)
+        elif self.strategy == 1:
             return wordle_solver.long_pick(self.list)
         else:
             return self.list[0]
