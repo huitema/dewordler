@@ -28,7 +28,7 @@ for i in range(0,6):
         elif x in resolv.wordle_query.word_set:
             break
         elif len(x) != 5:
-            print("   <" + x + "> is not in list")
+            print("   <" + x + "> is not 5 characters")
         else:
             maybe_result = True
             for c in x:
@@ -40,6 +40,17 @@ for i in range(0,6):
                 else:
                     print("   <" + x + "> is not a guess")
                     maybe_result = false
+            else:
+                maybe_alpha = True
+                for c in x:
+                    if ord(c) < ord('a') or ord(c) > ord('z'):
+                        maybe_alpha=False
+                        break
+                if not maybe_alpha:
+                    print("    <" + x + "> is not made of letters.")
+                else:
+                    break
+                
                     
     if maybe_result:
         r = x
