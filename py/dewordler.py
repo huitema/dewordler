@@ -18,6 +18,7 @@ s = resolv.wordle_solver()
 suggested = ""
 
 for i in range(0,6):
+    maybe_result=False
     while True:
         x = input("Guess: ")
         x = x.strip()
@@ -26,10 +27,25 @@ for i in range(0,6):
             break
         elif x in resolv.wordle_query.word_set:
             break
-        else:
+        elif len(x) != 5:
             print("   <" + x + "> is not in list")
-    
-    r = input("Result: ")
+        else:
+            maybe_result = True
+            for c in x:
+                if c != '.' and c != '*' and c != '=':
+                    maybe_result = False
+            if maybe_result:
+                if len(suggested) > 0:
+                    break
+                else:
+                    print("   <" + x + "> is not a guess")
+                    maybe_result = false
+                    
+    if maybe_result:
+        r = x
+        x = suggested
+    else:
+        r = input("Result: ")
     if r == "=====":
         print ("You win in " + str(i+1) + " trials.")
         break
