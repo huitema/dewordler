@@ -35,11 +35,7 @@ for i in range(0,6):
                 if c != '.' and c != '*' and c != '=':
                     maybe_result = False
             if maybe_result:
-                if len(suggested) > 0:
-                    break
-                else:
-                    print("   <" + x + "> is not a guess")
-                    maybe_result = false
+                break
             else:
                 maybe_alpha = True
                 for c in x:
