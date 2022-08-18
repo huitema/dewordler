@@ -15,24 +15,56 @@ import sys
 x = ""
 r = ""
 s = resolv.wordle_solver()
+suggested = ""
 
 for i in range(0,6):
+    maybe_result=False
     while True:
         x = input("Guess: ")
         x = x.strip()
-        if x in resolv.wordle_query.word_set:
+        if len(x) == 0 and len(suggested) > 0:
+            x = suggested
             break
+        elif x in resolv.wordle_query.word_set:
+            break
+        elif len(x) != 5:
+            print("   <" + x + "> is not 5 characters")
         else:
-            print("   " + x + " is not in list")
-    
-    r = input("Result: ")
+            maybe_result = True
+            for c in x:
+                if c != '.' and c != '*' and c != '=':
+                    maybe_result = False
+            if maybe_result:
+                break
+            else:
+                maybe_alpha = True
+                for c in x:
+                    if ord(c) < ord('a') or ord(c) > ord('z'):
+                        maybe_alpha=False
+                        break
+                if not maybe_alpha:
+                    print("    <" + x + "> is not made of letters.")
+                else:
+                    break
+                
+                    
+    if maybe_result:
+        r = x
+        x = suggested
+    else:
+        r = input("Result: ")
     if r == "=====":
         print ("You win in " + str(i+1) + " trials.")
         break
     s.process(x, r)
-    # s.show()
-    if len(s.list) == 1:
-        print("There is only 1 possible word.")
+    if len(s.list) == 0:
+        print("There are no possible solutions!");
+        break;
+    elif len(s.list) == 1:
+        print("There is only 1 possible word: " + s.list[0])
+        print ("You win in " + str(i+2) + " trials.")
+        r = "====="
+        break
     else:
         print("There are " + str(len(s.list)) + " possible words")
         if len(s.list) < 10:
@@ -40,7 +72,8 @@ for i in range(0,6):
             for w in s.list:
                 sli += w + ", "
             print(sli)
-    print("Solver suggests: " + s.suggest_recursive(30))
+    suggested =  s.suggest_recursive(30, debug=False)
+    print("Solver suggests: " + suggested)
     
 if r != "=====":
     print("Sorry for your loss.") 
