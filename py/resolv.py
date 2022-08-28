@@ -135,14 +135,27 @@ class wordle_query:
     def compare(self, trial5):
         return wordle_query.compare_word(self.w, trial5)
 
+# Does a guess match a pattern?
+# For each position, we can see ".", "*" or "=".
+# testing for =?
+# - false if does not exactly match.
+# testing for ".":
+# - skip the character if marked as "="
+# - for all other characters, mark false if match
+# testing for "*"
+# - mark false if match at position
+# - skip if position is known
+# - mark false if not found at least once at other position
+#
 class wordle_solver:
+    # Init  a solver. 
     def __init__(self, strategy=2, n_max=8):
+        # initialize the list of valid responses with the complete list.
         self.list = []
         for w in wordle_words.word_list:
             self.list.append(w)
+        # Found will list either a dot or a match character, for each position
         self.found = [".", ".", ".", ".", "."]
-        self.excluded = set()
-        self.included = set()
         self.strategy=strategy
         self.n_max = n_max
         self.rec_string = ""
@@ -155,38 +168,34 @@ class wordle_solver:
         c.found = []
         for x in self.found:
             c.found.append(x)
-        c.excluded = set()
-        for x in self.excluded:
-            c.excluded.add(x)
-        c.included = set()
-        for x in self.included:
-            c.included.add(x)
         return c
-
+  
     def pattern_match(self, w, guess, result):
         ret = True
-        not_matched = set()
         for i in range(0,5):
-            x = w[i]
-            if self.found[i] != ".":
-                if x != self.found[i]:
+            r = result[i]
+            if r == '=':
+                if w[i] != guess[i]:
                     ret = False
-                    break
-            elif result[i] != "=":
-                if x == guess[i]:
-                    ret = False
-                    break
-                elif x in self.excluded:
-                    ret = False
-                    break
-                else:
-                    not_matched.add(x)
-        if ret:
-            for l in self.included:
-                if not l in not_matched:
-                    ret = False
+            elif r == ".":
+                # this character is excluded.
+                g = guess[i]
+                for j in range(0,5):
+                    if result[j] != '=' and w[j] == g:
+                        ret = False
+                        break
+            elif r == "*":
+                g = guess[i]
+                ret = False
+                if w[i] != g:
+                    for j in range(0,5):
+                        if result[j] != '=' and w[j] == g:
+                            ret = True
+                            break
+            if not ret:
+                break
         return ret
-        
+    
     def filter(self, guess, result): 
         l = []
         for w in self.list:
@@ -194,35 +203,21 @@ class wordle_solver:
                 l.append(w)
         self.list = l
 
+    # Process a guess. 
+    # First, update all characters marked as "="
     def process(self, guess, result):
         removed = set()
         for i in range(0,5):
             if result[i] == "=" and self.found[i] == ".":
                 x = guess[i]
                 self.found[i] = x
-                if x in self.included:
-                    self.included.remove(x)
-        for i in range(0,5):
-            x = guess[i]
-            if self.found[i] == ".":
-                if result[i] == "*":
-                    if not x in self.included:
-                        self.included.add(x)
-                elif result[i] == "." and not x in self.excluded:
-                    self.excluded.add(x)
         self.filter(guess, result)
 
     def show(self):
         found = ""
         for a in self.found:
             found += a
-        include = ""
-        for b in self.included:
-            include += b
-        exclude = ""
-        for c in self.excluded:
-            exclude += c
-        print("Found: " + found + ", include: [" + include + "], exclude: [" + exclude + "]")
+        print("Found: " + found)
 
     def long_pick(l, debug=False):
         lc_max = 0
