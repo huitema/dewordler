@@ -12,6 +12,7 @@
 import wordle_words
 import sys
 
+not_words = set(["words", "steps"])
 words = set(wordle_words.word_list)
 nb_added = 0
 
@@ -26,7 +27,7 @@ for file_in in sys.argv[1:]:
                     if ord(p[i]) < ord("a") or ord(p[i]) > ord("z"):
                         alpha = False
                         break
-                if alpha and not p in words:
+                if alpha and not p in words and not p in not_words:
                     print("Adding: " + p)
                     words.add(p) 
                     nb_added += 1
@@ -50,3 +51,5 @@ if nb_added > 0:
             F.write(s)
         F.write("]\n")
         print("Saved " + str(rank) + " words.")
+else:
+    print("Nothing new.")
