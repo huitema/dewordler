@@ -146,6 +146,9 @@ class wordle_query:
 # - mark false if match at position
 # - skip if position is known
 # - mark false if not found at least once at other position
+# - Need to treat special cases with multiple occurence of
+#   same letter. In NYT UI, the first ocurence is marked "*",
+#   the next ones ".", but this works badly with our solver.
 #
 class wordle_solver:
     # Init  a solver. 
@@ -211,6 +214,13 @@ class wordle_solver:
             if result[i] == "=" and self.found[i] == ".":
                 x = guess[i]
                 self.found[i] = x
+        for i in range(0,5):
+            if self.found[i] == ".":
+                x = guess[i]
+                if result[i] == '*':
+                    removed.add(x)
+                elif result[i] == '.' and x in removed:
+                    result = result[0:i] + "*" + result[i+1:]
         self.filter(guess, result)
 
     def show(self):
