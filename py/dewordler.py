@@ -67,12 +67,19 @@ for i in range(0,6):
         break
     else:
         print("There are " + str(len(s.list)) + " possible words")
-        if len(s.list) < 10:
-            sli = ""
-            for w in s.list:
-                sli += w + ", "
-            print(sli)
-    suggested =  s.suggest_recursive(30, debug=False)
+        len_s_list = 0
+        sli = ""
+        for w in s.list:
+            len_s_list += 1
+            if len_s_list <= 10:
+                if len_s_list > 1:
+                    sli += ", "
+                sli += w
+            else:
+                sli += "..."
+                break
+        print(sli)
+    suggested = s.suggest_recursive(30, debug=False, rank=i)
     print("Solver suggests: " + suggested)
     
 if r != "=====":
