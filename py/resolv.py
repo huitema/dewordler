@@ -340,7 +340,8 @@ class wordle_solver:
 
             if (response_max <= 6 and minimax > 6) or \
                (response_max <= 6 and minimax <= 6 and sum_max < minisum) or \
-               (response_max > 6 and minimax > 6 and sum_max < minisum):
+               (response_max > 6 and minimax > 6 and (sum_max < minisum \
+                or (sum_max == minisum and response_max < minimax))):
                 minimax = response_max
                 minisum = sum_max
                 minimax_list = [ response ]
